@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 public class AutoService extends AccessibilityService {
 
+
+    private final int CLICK_DURATION = 1;
     public static final String DEBUG_TAG = "AUTO_CLICKER_AutoService";
     private Handler mHandler;
     private int mX;
@@ -44,7 +46,6 @@ public class AutoService extends AccessibilityService {
             String action = intent.getStringExtra("action");
             if (action.equals("play")) {
                 mX = intent.getIntExtra("x", 0);
-                //Log.d("x_value",Integer.toString(mX));
                 mY = intent.getIntExtra("y", 0);
                 if (mRunnable == null) {
                     mRunnable = new IntervalRunnable();
@@ -81,10 +82,10 @@ public class AutoService extends AccessibilityService {
     private void playTap(int x, int y) {
         Log.d(DEBUG_TAG, String.format("Playtap at x: %d, y: %d", x, y));
         Path swipePath = new Path();
-        swipePath.moveTo(x, y);
-        swipePath.lineTo(x+100, y+100);
+        swipePath.moveTo(x-10, y-10);
+//        swipePath.lineTo(x+100, y+100);
         GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
-        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 100, 5000));
+        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, CLICK_DURATION));
 
         Log.d(DEBUG_TAG, getWindows().toString());
         boolean isGestureDispatched = this.dispatchGesture(gestureBuilder.build(), new AccessibilityService.GestureResultCallback() {
@@ -93,7 +94,7 @@ public class AutoService extends AccessibilityService {
                 Log.d(DEBUG_TAG,"playTap -- Gesture Completed");
                 super.onCompleted(gestureDescription);
                 //mHandler.postDelayed(mRunnable, 1);
-                mHandler.post(mRunnable);
+//                mHandler.post(mRunnable);
             }
 
             @Override

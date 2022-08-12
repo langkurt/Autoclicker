@@ -29,21 +29,14 @@ public class FloatingView extends Service implements View.OnClickListener {
         Log.d(DEBUG_TAG, "onCreate");
         super.onCreate();
 
-
-
         //getting the widget layout from xml using layout inflater
         myFloatingView = LayoutInflater.from(this).inflate(R.layout.floating_view, null);
 
 
         int layout_parms;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-
-        {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             layout_parms = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-
-        }
-
-        else {
+        } else {
 
             layout_parms = WindowManager.LayoutParams.TYPE_PHONE;
 
@@ -64,7 +57,6 @@ public class FloatingView extends Service implements View.OnClickListener {
         mWindowManager.addView(myFloatingView, params);
 
 
-
         // adding an touchlistener to make drag movement of the floating widget
         Log.d(DEBUG_TAG, "onCreate -- adding an touchlistener to make drag movement of the floating widget");
         myFloatingView.findViewById(R.id.thisIsAnID).setOnTouchListener(new View.OnTouchListener() {
@@ -72,9 +64,10 @@ public class FloatingView extends Service implements View.OnClickListener {
             private int initialY;
             private float initialTouchX;
             private float initialTouchY;
+
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                Log.d(DEBUG_TAG,"THIS IS TOUCHED");
+                Log.d(DEBUG_TAG, "THIS IS TOUCHED");
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         initialX = params.x;
