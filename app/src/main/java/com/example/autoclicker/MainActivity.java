@@ -1,5 +1,7 @@
 package com.example.autoclicker;
 
+import static com.example.autoclicker.Constants.INTENT_PARAM_ACTION;
+
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -7,13 +9,12 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION = 2084;
     public static final String DEBUG_TAG = "AUTO_CLICKER_MAIN";
 //    public AutoService autoService;
@@ -23,10 +24,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        autoService = new AutoService();
-
-
         findViewById(R.id.startFloat).setOnClickListener(this);
+        findViewById(R.id.record).setOnClickListener(this);
 
     }
 
@@ -40,7 +39,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         if (Settings.canDrawOverlays(this)) {
             Log.d(DEBUG_TAG, "Handling MainActivity onclick -- starting FloatingView service");
-            startService(new Intent(MainActivity.this, FloatingView.class));
+
+            // Start floating view
+            Intent floatingView = new Intent(MainActivity.this, FloatingView.class);
+
+            if (v.getId() == R.id.record) {
+                floatingView.putExtra(INTENT_PARAM_ACTION, Action.RECORD.toString());
+            } else if (v.getId() == R.id.startFloat) {
+                // Should eventually change to passing the saved plays, or maybe an ID to fetch
+                // them from storage
+                floatingView.putExtra(INTENT_PARAM_ACTION, Action.PLAY.toString());
+            }
+            startService(floatingView);
+
             Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
             finish();
         } else {
@@ -49,27 +60,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-    private boolean handleEvent(MotionEvent event) {
-
-        int x = (int)event.getX();
-        int y = (int)event.getY();
-
-        Intent intent = new Intent(MainActivity.this, AutoService.class);
-        intent.putExtra("x", x);
-        intent.putExtra("y", y);
-
-        Log.d(DEBUG_TAG, String.format("click at x: %d; y: %d", x, y));
-        startService(intent);
-
-        return false;
-    }
-
-
     /*
-    * boiler
-    *
-    * */
+     * boiler
+     *
+     * */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
