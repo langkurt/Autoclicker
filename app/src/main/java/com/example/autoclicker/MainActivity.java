@@ -19,13 +19,33 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.room.Room;
+
+import com.example.autoclicker.db.AppDatabase;
+import com.example.autoclicker.db.PlayDao;
+import com.example.autoclicker.db.PlaylistDao;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION = 2084;
     public static final String DEBUG_TAG = "AUTO_CLICKER_MAIN";
-//    public AutoService autoService;
+
+    // db stuff
+    private boolean isDbSetup = false;
+    private AppDatabase db;
+    private PlaylistDao playlistDao;
+    private PlayDao playDao;
+
+    private void setupDb() {
+        if (!isDbSetup) {
+            this.db = Room.databaseBuilder(getApplicationContext(),
+                    AppDatabase.class, "database-name").build();
+            this.playlistDao = db.playlistDao();
+            this.playDao = db.playDao();
+            isDbSetup = true;
+        }
+    }
 
     private BroadcastReceiver bReceiver = new BroadcastReceiver(){
 
@@ -66,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.record).setOnClickListener(this);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(bReceiver, new IntentFilter(INTENT_FILTER_RECORDED_PLAYS));
+        setupDb();
     }
 
     private void askPermission() {
