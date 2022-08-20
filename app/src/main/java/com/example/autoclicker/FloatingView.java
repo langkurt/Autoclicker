@@ -106,23 +106,14 @@ public class FloatingView extends Service implements View.OnClickListener {
 
     private void displayFloatingView() {
 
-
         //getting the widget layout from xml using layout inflater
         myFloatingView = LayoutInflater.from(this).inflate(R.layout.floating_view, null);
-
-
-        int layout_parms;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            layout_parms = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            layout_parms = WindowManager.LayoutParams.TYPE_PHONE;
-        }
 
         //setting the layout parameters
         myFloatingViewLayoutParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
-                layout_parms,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
 

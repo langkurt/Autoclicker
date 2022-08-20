@@ -11,20 +11,20 @@ import java.util.Objects;
  *
  * */
 public class Play implements Parcelable {
-    private final int x;
-    private final int y;
-    private final int delay;
+    private final float x;
+    private final float y;
+    private final float delay;
 
-    Play(int x, int y, int delay) {
+    Play(float x, float y, float delay) {
         this.x = x;
         this.y = y;
         this.delay = delay;
     }
 
     protected Play(Parcel in) {
-        x = in.readInt();
-        y = in.readInt();
-        delay = in.readInt();
+        x = in.readFloat();
+        y = in.readFloat();
+        delay = in.readFloat();
     }
 
     public static final Creator<Play> CREATOR = new Creator<Play>() {
@@ -39,15 +39,15 @@ public class Play implements Parcelable {
         }
     };
 
-    public int x() {
+    public float x() {
         return x;
     }
 
-    public int y() {
+    public float y() {
         return y;
     }
 
-    public int delay() {
+    public float delay() {
         return delay;
     }
 
@@ -82,8 +82,8 @@ public class Play implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(x);
-        dest.writeInt(y);
-        dest.writeInt(delay);
+        dest.writeFloat(x);
+        dest.writeFloat(y);
+        dest.writeFloat(delay);
     }
 }
