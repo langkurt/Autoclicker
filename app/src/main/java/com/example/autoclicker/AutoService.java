@@ -1,11 +1,13 @@
 package com.example.autoclicker;
 
+import static com.example.autoclicker.Constants.INTENT_FILTER_RECORDED_PLAYS;
 import static com.example.autoclicker.Constants.INTENT_PARAM_ACTION;
 import static com.example.autoclicker.Constants.INTENT_PARAM_PLAYS;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.os.Handler;
@@ -18,6 +20,8 @@ import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.ArrayList;
 
@@ -67,8 +71,8 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         // set layout parameter of window manager
         touchLayoutParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT, // width of layout 30 px
-                WindowManager.LayoutParams.MATCH_PARENT, // height is equal to full screen
+                WindowManager.LayoutParams.MATCH_PARENT, // equal to full screen
+                WindowManager.LayoutParams.MATCH_PARENT, // equal to full screen
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, // this window won't ever get key input focus
                 PixelFormat.TRANSLUCENT);
@@ -112,13 +116,18 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
 
             } else if (action.equals(Action.RECORD.toString())) {
                 Log.d(DEBUG_TAG, "AutoService will record");
+                // reset recording vars for fresh start
+                recordedPlays.clear();
+                previousEventTime = 0;
+
                 addTouchLayoutView();
                 Toast.makeText(getBaseContext(), "Recording...", Toast.LENGTH_SHORT).show();
             } else if (action.equals(Action.STOP.toString())) {
                 Log.d(DEBUG_TAG, "AutoService will stop");
                 if (touchLayout != null) mWindowManager.removeView(touchLayout);
                 mHandler.removeCallbacksAndMessages(null);
-                // TODO: return recorded plays...
+                sendBroadcast();
+                stopSelf();
             }
         }
         return super.onStartCommand(intent, flags, startId);
@@ -162,8 +171,21 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
 
     }
 
+    private void sendBroadcast (){
+        Intent intent = new Intent (INTENT_FILTER_RECORDED_PLAYS);
+        intent.putExtra(INTENT_PARAM_PLAYS, recordedPlays);
+        Log.d(DEBUG_TAG, String.format("Sending %d recorded plays: %s", recordedPlays.size(), recordedPlays));
+        boolean isBroadcastSent = LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        Log.d(DEBUG_TAG, "isBroadcastSent? " + isBroadcastSent);
+    }
+
     private void addTap(float x, float y, long eventTime) {
         long delay = previousEventTime == 0 ? 0 : eventTime - previousEventTime;
+        if (delay < 100 && delay > 0) {
+            // short delay means the tap is replaying by the system. Not a human tap
+            Log.d(DEBUG_TAG, String.format("addTap: Short delay of %d. Skipping", delay));
+            return;
+        }
         previousEventTime = eventTime;
         Play play = new Play(x, y, delay);
         Log.d(DEBUG_TAG, "addTap: adding play: " + play);
@@ -185,15 +207,18 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
                 Log.d(DEBUG_TAG, "playTap -- Gesture Completed");
                 super.onCompleted(gestureDescription);
 
-                mWindowManager.updateViewLayout(touchLayout, touchLayoutParams); // Should be moved back to the onTouch callback
-
                 if (plays != null && !plays.isEmpty()) {
                     Play play = getNextPlay();
                     mX = play.x();
                     mY = play.y();
+
+                    Log.d(DEBUG_TAG, "playTap -- playing next tap : " + play);
                     mHandler.postDelayed(mRunnable, (long) play.delay());
                 } else {
                     // we're done here.
+
+                    Log.d(DEBUG_TAG, "playTap -- stopping self(like that does anything)");
+                    mWindowManager.updateViewLayout(touchLayout, touchLayoutParams); // Should be moved back to the onTouch callback
                     stopSelf(); // TODO: this needed?
 //                    disableSelf();
                 }

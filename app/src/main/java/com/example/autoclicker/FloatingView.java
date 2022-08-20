@@ -95,11 +95,15 @@ public class FloatingView extends Service implements View.OnClickListener {
         } else if (v.getId() == R.id.stop) {
             Log.d(DEBUG_TAG, "STOP was clicked from the floating view");
             mWindowManager.removeView(myFloatingView);
+
+            // Stop the autoclicker service
+            Intent intent = new Intent(getApplicationContext(), AutoService.class);
+            intent.putExtra(INTENT_PARAM_ACTION, Action.STOP.toString());
+            getApplication().startService(intent);
+
+            // Start the main activity
             Intent appMain = new Intent(getApplicationContext(), MainActivity.class);
-
-            // Calling startActivity() from outside of an Activity context requires the FLAG_ACTIVITY_NEW_TASK flag
             appMain.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
             getApplication().startActivity(appMain);
         }
     }
