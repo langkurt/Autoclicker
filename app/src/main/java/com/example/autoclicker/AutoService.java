@@ -1,5 +1,6 @@
 package com.example.autoclicker;
 
+import static android.view.View.VISIBLE;
 import static com.example.autoclicker.Constants.INTENT_FILTER_RECORDED_PLAYS;
 import static com.example.autoclicker.Constants.INTENT_PARAM_ACTION;
 import static com.example.autoclicker.Constants.INTENT_PARAM_PLAYS;
@@ -98,10 +99,15 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
         Log.d(DEBUG_TAG, "SERVICE STARTED");
 
         if (intent != null) {
+
             String action = intent.getStringExtra(INTENT_PARAM_ACTION);
             if (action.equals(Action.PLAY.toString())) {
                 this.plays = intent.getParcelableArrayListExtra(INTENT_PARAM_PLAYS);
                 Log.d(DEBUG_TAG, "AutoService will play: " + this.plays);
+
+                // reset recording vars for fresh start
+                recordedPlays.clear();
+                previousEventTime = 0;
 
                 // play the first one, then let the gesture callback play the remaining.
                 Play firstPlay = getNextPlay();
@@ -160,18 +166,28 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
             Log.d(DEBUG_TAG, event.toString());
 
             //  Store the tap
-            recordTap(event.getRawX(), event.getRawY(), event.getEventTime());
+            int x = (int) event.getRawX();
+            int y = (int) event.getRawY();
+            recordTap(x, y, event.getEventTime());
 
             mWindowManager.updateViewLayout(touchLayout, resizedTouchLayoutParams);
-            playTap(event.getRawX(), event.getRawY(), true);
+            playTap(x, y, true);
             return true;
         }
         return false; // True if the listener has consumed the event, false otherwise
 
     }
 
-    private void sendBroadcast (){
-        Intent intent = new Intent (INTENT_FILTER_RECORDED_PLAYS);
+    private void sendBroadcast() {
+        if (recordedPlays.isEmpty()) {
+            Log.d(DEBUG_TAG, "sendBroadcast: recorded plays is empty. Not sending broadcast");
+            return;
+        }
+
+        // Remove the last play which would be the tap for `stop`
+        recordedPlays.remove(recordedPlays.size() - 1);
+
+        Intent intent = new Intent(INTENT_FILTER_RECORDED_PLAYS);
         intent.putExtra(INTENT_PARAM_PLAYS, recordedPlays);
         Log.d(DEBUG_TAG, String.format("Sending %d recorded plays: %s", recordedPlays.size(), recordedPlays));
         boolean isBroadcastSent = LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
@@ -180,6 +196,14 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
 
     private void recordTap(float x, float y, long eventTime) {
         long delay = previousEventTime == 0 ? 0 : eventTime - previousEventTime;
+
+        if (recordedPlays.size() > 0) {
+            Play lastPlay = recordedPlays.get(recordedPlays.size() - 1);
+            if (x == lastPlay.x() && y == lastPlay.y()) {
+                Log.d(DEBUG_TAG, String.format("addTap: Same x: %f, y: %f coordinates as previous tap. Skipping", x, y));
+                return;
+            }
+        }
         if (delay < 100 && delay > 0) {
             // short delay means the tap is replaying by the system. Not a human tap
             Log.d(DEBUG_TAG, String.format("addTap: Short delay of %d. Skipping", delay));
@@ -208,10 +232,8 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
 
                 if (isSingleTap) {
                     mWindowManager.updateViewLayout(touchLayout, touchLayoutParams);
-                    return;
-                }
 
-                if (plays != null && !plays.isEmpty()) {
+                } else if (plays != null && !plays.isEmpty()) {
                     Play play = getNextPlay();
                     mX = play.x();
                     mY = play.y();
@@ -219,14 +241,6 @@ public class AutoService extends AccessibilityService implements View.OnTouchLis
                     Log.d(DEBUG_TAG, "playTap -- playing next tap : " + play);
                     mHandler.postDelayed(mRunnable, (long) play.delay());
                 }
-//                else {
-//                    // we're done here.
-//
-//                    Log.d(DEBUG_TAG, "playTap -- stopping self(like that does anything)");
-//                    mWindowManager.updateViewLayout(touchLayout, touchLayoutParams); // Should be moved back to the onTouch callback
-//                    stopSelf(); // TODO: this needed?
-////                    disableSelf();
-//                }
             }
 
             @Override

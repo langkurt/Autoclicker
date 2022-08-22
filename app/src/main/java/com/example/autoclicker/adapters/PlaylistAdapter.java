@@ -29,6 +29,12 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> {
         this.playlistInflater = LayoutInflater.from(context);
     }
 
+    public void update(List<Playlist> playlists ) {
+        this.playlists.clear();
+        this.playlists.addAll(playlists);
+        this.notifyDataSetChanged();
+    }
+
     @Override
     public int getCount() {
         return playlists.size();

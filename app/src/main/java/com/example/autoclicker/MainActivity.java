@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION = 2084;
     public static final String DEBUG_TAG = "AUTO_CLICKER_MAIN";
 
+    private PlaylistAdapter playlistAdapter;
+
     // db stuff
     private boolean isSetup = false;
     private AppDatabase db;
@@ -84,21 +86,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ).collect(Collectors.toList());
         Log.d(DEBUG_TAG, String.format("%d plays to send: %s", playsToSend.size(), playsToSend));
 
-//        if (true) return;
         // Start floating view
         Intent floatingView = new Intent(MainActivity.this, FloatingView.class);
         floatingView.putExtra(INTENT_PARAM_ACTION, Action.PLAY.toString());
         floatingView.putExtra(INTENT_PARAM_PLAYS, new ArrayList<Play>(playsToSend));
         startService(floatingView);
 
-        Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
-        finish();
+//        Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
+//        finish();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d(DEBUG_TAG, "onCreate");
+        Log.d(DEBUG_TAG, "onCreate with this " + this);
+        if (savedInstanceState != null) {
+            boolean isffv = savedInstanceState.getBoolean("isFromFloatingView");
+            Log.d(DEBUG_TAG, "onCreate: isffv: " + isffv);
+
+        }
 
         setContentView(R.layout.activity_main);
         findViewById(R.id.record).setOnClickListener(this);
@@ -120,8 +126,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void createPlaylistUI() {
         ListView playlistListView = (ListView) findViewById(R.id.playlist_list_view);
-        PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, playlistDao.getAll());
+        playlistAdapter = new PlaylistAdapter(this, playlistDao.getAll());
         playlistListView.setAdapter(playlistAdapter);
+
     }
 
     // Broadcast receiver for listening to when the autoservice returns recorded clicks
@@ -135,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d(DEBUG_TAG, "onReceive: Broadcast received: " + recordedPlays);
 
             // todo: Ask user for playlist name (what did you just do?)
-            String name = "demo";
+            String name = String.format("%s taps", recordedPlays.size());
 
             storeRecordedPlays(name, recordedPlays);
 
@@ -177,8 +184,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 floatingView.putExtra(INTENT_PARAM_ACTION, Action.RECORD.toString());
                 startService(floatingView);
 
-                Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
-                finish();
+//                Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
+//                finish();
+
             }
 
         } else {
@@ -190,6 +198,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void setup() {
         if (!isSetup) {
             Log.d(DEBUG_TAG, "setup: Setting up db and broadcast receiver");
+
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(bReceiver);
             LocalBroadcastManager.getInstance(this).registerReceiver(bReceiver, new IntentFilter(INTENT_FILTER_RECORDED_PLAYS));
 
             this.db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name")
@@ -232,13 +242,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onDestroy() {
         Log.d(DEBUG_TAG, "onDestroy");
         super.onDestroy();
-//        LocalBroadcastManager.getInstance(this).unregisterReceiver(bReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(bReceiver);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         Log.d(DEBUG_TAG, "onResume");
+        playlistAdapter.update(playlistDao.getAll());
 //        LocalBroadcastManager.getInstance(this).registerReceiver(bReceiver, new IntentFilter(INTENT_FILTER_RECORDED_PLAYS));
     }
 

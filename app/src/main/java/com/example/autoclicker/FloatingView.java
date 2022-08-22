@@ -6,6 +6,7 @@ import static com.example.autoclicker.Constants.INTENT_PARAM_PLAYS;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -75,10 +76,6 @@ public class FloatingView extends Service implements View.OnClickListener {
             Intent intent = new Intent(getApplicationContext(), AutoService.class);
             intent.putExtra(INTENT_PARAM_ACTION, this.startingIntent.getStringExtra(INTENT_PARAM_ACTION));
 
-            // Are we trying to playback? pass the plays, but since we dont have any, play against
-            // a single point... for now.
-
-
             Log.d(DEBUG_TAG, "onClick: received the following intent " + this.startingIntent);
             Log.d(DEBUG_TAG, "onClick: received the following intent Extras " + this.startingIntent.getExtras());
 
@@ -86,14 +83,11 @@ public class FloatingView extends Service implements View.OnClickListener {
                 ArrayList<Play> plays = this.startingIntent.getParcelableArrayListExtra(INTENT_PARAM_PLAYS);
 
                 Log.d(DEBUG_TAG, "onClick: received the following plays " + plays);
-                if (plays != null) {
-                    intent.putExtra(INTENT_PARAM_PLAYS, plays);
-                } else {
-                    int[] location = new int[2];
-                    myFloatingView.getLocationOnScreen(location);
-                    intent.putExtra(INTENT_PARAM_PLAYS, new ArrayList<>(
-                            Collections.singletonList(new Play(location[0], location[1], 0))));
+                if (plays == null) {
+                    Log.d(DEBUG_TAG, "onClick: Plays received from the intent are null. Returning");
+                    return;
                 }
+                intent.putExtra(INTENT_PARAM_PLAYS, plays);
             }
 
             getApplication().startService(intent);
@@ -102,15 +96,17 @@ public class FloatingView extends Service implements View.OnClickListener {
             Log.d(DEBUG_TAG, "STOP was clicked from the floating view");
             mWindowManager.removeView(myFloatingView);
 
+            // Start the main activity
+            Intent appMain = new Intent(getApplicationContext(), MainActivity.class);
+            appMain.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getApplication().startActivity(appMain);
+
             // Stop the autoclicker service
             Intent intent = new Intent(getApplicationContext(), AutoService.class);
             intent.putExtra(INTENT_PARAM_ACTION, Action.STOP.toString());
             getApplication().startService(intent);
 
-            // Start the main activity
-            Intent appMain = new Intent(getApplicationContext(), MainActivity.class);
-            appMain.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getApplication().startActivity(appMain);
+
         }
     }
 
