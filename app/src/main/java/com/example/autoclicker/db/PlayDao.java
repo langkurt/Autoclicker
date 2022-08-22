@@ -11,17 +11,20 @@ import java.util.List;
 public interface PlayDao {
 
     @Insert
-    void insert(Play play);
+    void insert(PlayItem playItem);
 
     @Insert
-    void insertAll(Play... plays);
+    void insertAll(PlayItem... playItems);
 
     @Delete
-    void delete(Play play);
+    void delete(PlayItem playItem);
 
     @Delete
-    void deleteAll(Play... plays);
+    void deleteAll(PlayItem... playItems);
 
-    @Query("SELECT * FROM play")
-    List<Play> getAll();
+    @Query("SELECT * FROM PlayItem")
+    List<PlayItem> getAll();
+
+    @Query("SELECT * FROM PlayItem WHERE PlayItem.play_list_id = :playlistId")
+    List<PlayItem> getAllFromPlaylist(int playlistId);
 }

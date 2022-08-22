@@ -5,20 +5,20 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity
-public class Play {
+public class PlayItem {
 
     @PrimaryKey(autoGenerate = true)
     public int playId;
 
     @ColumnInfo(name = "play_list_id")
-    public long PlayListId;
+    public long playListId;
 
     @ColumnInfo(name = "x_coordinate")
-    public long xCoordinate;
+    public float xCoordinate;
 
     @ColumnInfo(name = "y_coordinate")
-    public long yCoordinate;
+    public float yCoordinate;
 
     @ColumnInfo(name = "delay")
-    public long delay;
+    public float delay;
 }

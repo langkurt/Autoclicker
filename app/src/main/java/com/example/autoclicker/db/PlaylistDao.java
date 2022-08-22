@@ -21,5 +21,9 @@ public interface PlaylistDao {
 
     @Transaction
     @Query("SELECT * FROM Playlist")
-    public List<PlaylistWithPlays> getPlaylistWithPlays();
+    public List<PlaylistWithPlays> getPlaylistsWithPlays();
+
+    @Transaction
+    @Query("SELECT * FROM Playlist WHERE playlistId = :playlistId")
+    public PlaylistWithPlays getPlaylistWithPlays(int playlistId);
 }

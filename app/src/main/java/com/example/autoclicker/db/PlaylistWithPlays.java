@@ -12,5 +12,5 @@ public class PlaylistWithPlays {
             parentColumn = "playlistId",
             entityColumn = "playId"
     )
-    public List<Play> plays;
+    public List<PlayItem> playItems;
 }

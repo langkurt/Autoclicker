@@ -6,7 +6,6 @@ import static com.example.autoclicker.Constants.INTENT_PARAM_PLAYS;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
-import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,7 +15,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 
@@ -26,7 +24,7 @@ public class FloatingView extends Service implements View.OnClickListener {
     private WindowManager.LayoutParams myFloatingViewLayoutParams;
     public static final String DEBUG_TAG = "AUTO_CLICKER_FLOATING_VIEW";
 
-    private Intent intent;
+    private Intent startingIntent;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -45,9 +43,10 @@ public class FloatingView extends Service implements View.OnClickListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(DEBUG_TAG, "onStartCommand with intent: " + intent);
+        Log.d(DEBUG_TAG, "onStartCommand with intent: " + intent.getExtras());
 
         // Save the intent for later
-        this.intent = intent;
+        this.startingIntent = intent;
         try {
             mWindowManager.addView(myFloatingView, myFloatingViewLayoutParams);
         } catch (IllegalStateException e) {
@@ -74,12 +73,19 @@ public class FloatingView extends Service implements View.OnClickListener {
             Log.d(DEBUG_TAG, "START was clicked from the floating view");
             // Starting either the recording or a playback
             Intent intent = new Intent(getApplicationContext(), AutoService.class);
-            intent.putExtra(INTENT_PARAM_ACTION, this.intent.getStringExtra(INTENT_PARAM_ACTION));
+            intent.putExtra(INTENT_PARAM_ACTION, this.startingIntent.getStringExtra(INTENT_PARAM_ACTION));
 
             // Are we trying to playback? pass the plays, but since we dont have any, play against
             // a single point... for now.
-            if (Objects.equals(intent.getStringExtra(INTENT_PARAM_ACTION), Action.PLAY.toString())) {
-                ArrayList<Play> plays = intent.getParcelableArrayListExtra(INTENT_PARAM_PLAYS);
+
+
+            Log.d(DEBUG_TAG, "onClick: received the following intent " + this.startingIntent);
+            Log.d(DEBUG_TAG, "onClick: received the following intent Extras " + this.startingIntent.getExtras());
+
+            if (Objects.equals(this.startingIntent.getStringExtra(INTENT_PARAM_ACTION), Action.PLAY.toString())) {
+                ArrayList<Play> plays = this.startingIntent.getParcelableArrayListExtra(INTENT_PARAM_PLAYS);
+
+                Log.d(DEBUG_TAG, "onClick: received the following plays " + plays);
                 if (plays != null) {
                     intent.putExtra(INTENT_PARAM_PLAYS, plays);
                 } else {

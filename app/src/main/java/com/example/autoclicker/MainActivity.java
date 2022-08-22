@@ -15,64 +15,72 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.room.Room;
 
+import com.example.autoclicker.adapters.PlaylistAdapter;
 import com.example.autoclicker.db.AppDatabase;
 import com.example.autoclicker.db.PlayDao;
+import com.example.autoclicker.db.PlayItem;
+import com.example.autoclicker.db.Playlist;
 import com.example.autoclicker.db.PlaylistDao;
+import com.example.autoclicker.db.PlaylistWithPlays;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final int SYSTEM_ALERT_WINDOW_PERMISSION = 2084;
     public static final String DEBUG_TAG = "AUTO_CLICKER_MAIN";
 
     // db stuff
-    private boolean isDbSetup = false;
+    private boolean isSetup = false;
     private AppDatabase db;
     private PlaylistDao playlistDao;
     private PlayDao playDao;
 
-    private void setupDb() {
-        if (!isDbSetup) {
-            this.db = Room.databaseBuilder(getApplicationContext(),
-                    AppDatabase.class, "database-name").build();
-            this.playlistDao = db.playlistDao();
-            this.playDao = db.playDao();
-            isDbSetup = true;
-        }
+    public void deletePlaylistOnClickHandler(View view) {
+        Log.d(DEBUG_TAG, "deletePlaylistOnClickHandler: " + view);
+        Log.d(DEBUG_TAG, "Deleting Playlist with ID: " + view.getTag());
+        Playlist playlist = new Playlist();
+        playlist.playlistId = view.getId();
+        playlistDao.delete(playlist);
     }
 
-    private BroadcastReceiver bReceiver = new BroadcastReceiver(){
+    public void startPlaylistOnClickHandler(View view) {
+        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: " + view);
+        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: " + view.getTag());
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
+        Log.d(DEBUG_TAG, "Handling MainActivity startPlaylistOnClickHandler -- starting FloatingView service");
 
-            // We want to receive the list of plays
-            ArrayList<Play> recordedPlays = intent.getParcelableArrayListExtra(INTENT_PARAM_PLAYS);
-            Log.d(DEBUG_TAG, "onReceive: Broadcast received: " + recordedPlays);
+        PlaylistWithPlays playlistWithPlays = playlistDao.getPlaylistWithPlays((int) view.getTag());
+        Log.d(DEBUG_TAG, "playlist: " + playlistWithPlays.playList.toString());
 
-            //Ask user for playlist name (what did you just do?)
-
-            // Store list of plays & name
-
+        if (playlistWithPlays.playItems.isEmpty()) {
+            Log.d(DEBUG_TAG, "Playlist is empty, returning");
+            return;
         }
-    };
+        Log.d(DEBUG_TAG, "plays from db: " + playlistWithPlays.playItems);
+        List<Play> playsToSend = playlistWithPlays.playItems.stream().map(playItem ->
+                new Play(playItem.xCoordinate, playItem.yCoordinate, playItem.delay)
+        ).collect(Collectors.toList());
+        Log.d(DEBUG_TAG, String.format("%d plays to send: %s", playsToSend.size(), playsToSend));
 
-    protected void onResume(){
-        super.onResume();
-        Log.d(DEBUG_TAG, "onResume");
-//        LocalBroadcastManager.getInstance(this).registerReceiver(bReceiver, new IntentFilter(INTENT_FILTER_RECORDED_PLAYS));
-    }
+        // Start floating view
+        Intent floatingView = new Intent(MainActivity.this, FloatingView.class);
+        floatingView.putExtra(INTENT_PARAM_ACTION, Action.PLAY.toString());
+        floatingView.putExtra(INTENT_PARAM_PLAYS, new ArrayList<Play>(playsToSend));
+        startService(floatingView);
 
-    protected void onPause (){
-        super.onPause();
-        Log.d(DEBUG_TAG, "onPause");
-//        LocalBroadcastManager.getInstance(this).unregisterReceiver(bReceiver);
+        Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
+        finish();
     }
 
     @Override
@@ -81,12 +89,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(DEBUG_TAG, "onCreate");
 
         setContentView(R.layout.activity_main);
-
-        findViewById(R.id.startFloat).setOnClickListener(this);
         findViewById(R.id.record).setOnClickListener(this);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(bReceiver, new IntentFilter(INTENT_FILTER_RECORDED_PLAYS));
-        setupDb();
+        // one time setup
+        setup();
+
+        // Uncomment and run once to start fresh...
+//         db.clearAllTables();
+        createPlaylistUI();
+        Log.d(DEBUG_TAG, "onCreate: Database has.. " + playlistDao.getPlaylistsWithPlays());
     }
 
     private void askPermission() {
@@ -95,28 +106,86 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(intent, SYSTEM_ALERT_WINDOW_PERMISSION);
     }
 
+    private void createPlaylistUI() {
+        ListView playlistListView = (ListView) findViewById(R.id.playlist_list_view);
+        PlaylistAdapter playlistAdapter = new PlaylistAdapter(this, playlistDao.getAll());
+        playlistListView.setAdapter(playlistAdapter);
+    }
+
+    // Broadcast receiver for listening to when the autoservice returns recorded clicks
+    private final BroadcastReceiver bReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            // We want to receive the list of plays
+            ArrayList<Play> recordedPlays = intent.getParcelableArrayListExtra(INTENT_PARAM_PLAYS);
+            Log.d(DEBUG_TAG, "onReceive: Broadcast received: " + recordedPlays);
+
+            // todo: Ask user for playlist name (what did you just do?)
+            String name = "demo";
+
+            storeRecordedPlays(name, recordedPlays);
+
+        }
+    };
+
+    private void storeRecordedPlays(String name, List<Play> recordedPlays) {
+        if (recordedPlays.isEmpty()) {
+            Log.d(DEBUG_TAG, "storeRecordedPlays: Nothing to store");
+            return;
+        }
+        // Store list of plays & name
+        Playlist playlist = new Playlist();
+        playlist.name = name;
+        Log.d(DEBUG_TAG, "storeRecordedPlays: inserting playlist ");
+        playlistDao.insert(playlist);
+
+        for (Play play : recordedPlays) {
+            PlayItem playItem = new PlayItem();
+            playItem.playListId = playlist.playlistId;
+            playItem.xCoordinate = play.x();
+            playItem.yCoordinate = play.y();
+            playItem.delay = play.delay();
+            Log.d(DEBUG_TAG, "storeRecordedPlays: inserting playItem " + playItem);
+            playDao.insert(playItem);
+        }
+    }
+
     @Override
     public void onClick(View v) {
+        Log.d(DEBUG_TAG, "onClick: view is " + v);
         if (Settings.canDrawOverlays(this)) {
-            Log.d(DEBUG_TAG, "Handling MainActivity onclick -- starting FloatingView service");
-
-            // Start floating view
-            Intent floatingView = new Intent(MainActivity.this, FloatingView.class);
 
             if (v.getId() == R.id.record) {
-                floatingView.putExtra(INTENT_PARAM_ACTION, Action.RECORD.toString());
-            } else if (v.getId() == R.id.startFloat) {
-                // Should eventually change to passing the saved plays, or maybe an ID to fetch
-                // them from storage
-                floatingView.putExtra(INTENT_PARAM_ACTION, Action.PLAY.toString());
-            }
-            startService(floatingView);
+                Log.d(DEBUG_TAG, "Handling MainActivity onclick -- starting FloatingView service");
 
-            Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
-            finish();
+                // Start floating view
+                Intent floatingView = new Intent(MainActivity.this, FloatingView.class);
+                floatingView.putExtra(INTENT_PARAM_ACTION, Action.RECORD.toString());
+                startService(floatingView);
+
+                Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
+                finish();
+            }
+
         } else {
             askPermission();
             Toast.makeText(this, "You need System Alert Window Permission to do this", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setup() {
+        if (!isSetup) {
+            Log.d(DEBUG_TAG, "setup: Setting up db and broadcast receiver");
+            LocalBroadcastManager.getInstance(this).registerReceiver(bReceiver, new IntentFilter(INTENT_FILTER_RECORDED_PLAYS));
+
+            this.db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "database-name")
+                    .allowMainThreadQueries()
+                    .build();
+            this.playlistDao = db.playlistDao();
+            this.playDao = db.playDao();
+            isSetup = true;
         }
     }
 
@@ -150,7 +219,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onDestroy() {
         Log.d(DEBUG_TAG, "onDestroy");
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(bReceiver);
         super.onDestroy();
+//        LocalBroadcastManager.getInstance(this).unregisterReceiver(bReceiver);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(DEBUG_TAG, "onResume");
+//        LocalBroadcastManager.getInstance(this).registerReceiver(bReceiver, new IntentFilter(INTENT_FILTER_RECORDED_PLAYS));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(DEBUG_TAG, "onPause");
+//        LocalBroadcastManager.getInstance(this).unregisterReceiver(bReceiver);
     }
 }
