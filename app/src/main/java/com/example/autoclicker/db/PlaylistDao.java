@@ -11,13 +11,16 @@ import java.util.List;
 @Dao
 public interface PlaylistDao {
     @Insert
-    void insert(Playlist playlist);
+    long insert(Playlist playlist);
 
     @Delete
     void delete(Playlist playlist);
 
     @Query("SELECT * FROM playlist")
     List<Playlist> getAll();
+
+    @Query("SELECT * FROM playlist WHERE playlistId = :playlistId")
+    Playlist getOne(int playlistId);
 
     @Transaction
     @Query("SELECT * FROM Playlist")

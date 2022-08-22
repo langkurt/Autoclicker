@@ -1,5 +1,6 @@
 package com.example.autoclicker.db;
 
+import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -21,4 +22,14 @@ public class PlayItem {
 
     @ColumnInfo(name = "delay")
     public float delay;
+
+    @NonNull
+    @Override
+    public String toString() {
+        return String.format("PlayId: %s \t" +
+                "playListId: %s \t" +
+                "xCoordinate: %s \t" +
+                "yCoordinate: %s \t" +
+                "delay: %s", playId, playListId, xCoordinate, yCoordinate, delay);
+    }
 }

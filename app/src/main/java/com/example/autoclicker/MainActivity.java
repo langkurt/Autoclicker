@@ -46,6 +46,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private PlaylistDao playlistDao;
     private PlayDao playDao;
 
+    /**
+     * Onclick handle for when the play list item 'delete' button is clicked
+     * */
     public void deletePlaylistOnClickHandler(View view) {
         Log.d(DEBUG_TAG, "deletePlaylistOnClickHandler: " + view);
         Log.d(DEBUG_TAG, "Deleting Playlist with ID: " + view.getTag());
@@ -54,25 +57,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         playlistDao.delete(playlist);
     }
 
+    /**
+     * Onclick handle for when the play list item 'play' button is clicked
+     * */
     public void startPlaylistOnClickHandler(View view) {
         Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: " + view);
         Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: " + view.getTag());
 
         Log.d(DEBUG_TAG, "Handling MainActivity startPlaylistOnClickHandler -- starting FloatingView service");
 
-        PlaylistWithPlays playlistWithPlays = playlistDao.getPlaylistWithPlays((int) view.getTag());
-        Log.d(DEBUG_TAG, "playlist: " + playlistWithPlays.playList.toString());
+        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: playlist id to fetch" + view.getTag());
 
-        if (playlistWithPlays.playItems.isEmpty()) {
+        Playlist playlist = playlistDao.getOne((int) view.getTag());
+        List<PlayItem> playItems = playDao.getAllFromPlaylist(playlist.playlistId);
+
+        Log.d(DEBUG_TAG, "playlist: " + playlist);
+        Log.d(DEBUG_TAG, "play items: " + playItems.toString());
+
+        if (playItems.isEmpty()) {
             Log.d(DEBUG_TAG, "Playlist is empty, returning");
             return;
         }
-        Log.d(DEBUG_TAG, "plays from db: " + playlistWithPlays.playItems);
-        List<Play> playsToSend = playlistWithPlays.playItems.stream().map(playItem ->
+        Log.d(DEBUG_TAG, "plays from db: " + playItems);
+        List<Play> playsToSend = playItems.stream().map(playItem ->
                 new Play(playItem.xCoordinate, playItem.yCoordinate, playItem.delay)
         ).collect(Collectors.toList());
         Log.d(DEBUG_TAG, String.format("%d plays to send: %s", playsToSend.size(), playsToSend));
 
+//        if (true) return;
         // Start floating view
         Intent floatingView = new Intent(MainActivity.this, FloatingView.class);
         floatingView.putExtra(INTENT_PARAM_ACTION, Action.PLAY.toString());
@@ -139,11 +151,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Playlist playlist = new Playlist();
         playlist.name = name;
         Log.d(DEBUG_TAG, "storeRecordedPlays: inserting playlist ");
-        playlistDao.insert(playlist);
+        long playlistId = playlistDao.insert(playlist);
 
         for (Play play : recordedPlays) {
             PlayItem playItem = new PlayItem();
-            playItem.playListId = playlist.playlistId;
+            playItem.playListId = playlistId;
             playItem.xCoordinate = play.x();
             playItem.yCoordinate = play.y();
             playItem.delay = play.delay();
