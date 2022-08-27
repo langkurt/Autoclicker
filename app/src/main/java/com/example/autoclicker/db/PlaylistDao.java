@@ -13,8 +13,8 @@ public interface PlaylistDao {
     @Insert
     long insert(Playlist playlist);
 
-    @Delete
-    void delete(Playlist playlist);
+    @Query("DELETE FROM playlist WHERE playlistId = :playlistId")
+    void deleteById(int playlistId);
 
     @Query("SELECT * FROM playlist")
     List<Playlist> getAll();

@@ -13,17 +13,8 @@ public interface PlayDao {
     @Insert
     void insert(PlayItem playItem);
 
-    @Insert
-    void insertAll(PlayItem... playItems);
-
-    @Delete
-    void delete(PlayItem playItem);
-
-    @Delete
-    void deleteAll(PlayItem... playItems);
-
-    @Query("SELECT * FROM PlayItem")
-    List<PlayItem> getAll();
+    @Query("DELETE FROM playitem WHERE PlayItem.play_list_id = :playlistId")
+    void deleteByPlaylistId(int playlistId);
 
     @Query("SELECT * FROM PlayItem WHERE PlayItem.play_list_id = :playlistId")
     List<PlayItem> getAllFromPlaylist(int playlistId);

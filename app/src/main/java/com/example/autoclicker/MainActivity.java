@@ -52,22 +52,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Onclick handle for when the play list item 'delete' button is clicked
      * */
     public void deletePlaylistOnClickHandler(View view) {
-        Log.d(DEBUG_TAG, "deletePlaylistOnClickHandler: " + view);
-        Log.d(DEBUG_TAG, "Deleting Playlist with ID: " + view.getTag());
-        Playlist playlist = new Playlist();
-        playlist.playlistId = view.getId();
-        playlistDao.delete(playlist);
+        int playlistId = (int) view.getTag();
+        Log.d(DEBUG_TAG, "deletePlaylistOnClickHandler: Deleting Plays and Playlist with PlaylistId: " + playlistId);
+        playlistDao.deleteById(playlistId);
+        playDao.deleteByPlaylistId(playlistId);
+
+        playlistAdapter.update(playlistDao.getAll());
     }
 
     /**
      * Onclick handle for when the play list item 'play' button is clicked
      * */
     public void startPlaylistOnClickHandler(View view) {
-        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: " + view);
-        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: " + view.getTag());
-
-        Log.d(DEBUG_TAG, "Handling MainActivity startPlaylistOnClickHandler -- starting FloatingView service");
-
         Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: playlist id to fetch" + view.getTag());
 
         Playlist playlist = playlistDao.getOne((int) view.getTag());
@@ -87,13 +83,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d(DEBUG_TAG, String.format("%d plays to send: %s", playsToSend.size(), playsToSend));
 
         // Start floating view
+        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler -- starting FloatingView service");
         Intent floatingView = new Intent(MainActivity.this, FloatingView.class);
         floatingView.putExtra(INTENT_PARAM_ACTION, Action.PLAY.toString());
         floatingView.putExtra(INTENT_PARAM_PLAYS, new ArrayList<Play>(playsToSend));
         startService(floatingView);
-
-//        Log.d(DEBUG_TAG, "Handling MainActivity onclick -- finishing");
-//        finish();
     }
 
     @Override
