@@ -4,16 +4,28 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:id="@+id/play_view">
+
     <Button
         android:id="@+id/start"
-        android:onClick="startPlaylistOnClickHandler"
+        style="?android:attr/buttonBarButtonStyle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:onClick="startPlaylistOnClickHandler"
+        android:text="start" />
+
+    <Button
+        android:id="@+id/description"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="describePlaylistOnClickHandler"
+        android:text="description" />
 
     <Button
         android:id="@+id/delete"
         android:text="delete"
         android:onClick="deletePlaylistOnClickHandler"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        style="?android:attr/buttonBarButtonStyle" />
 </LinearLayout>

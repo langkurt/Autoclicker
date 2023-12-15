@@ -15,8 +15,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -30,7 +28,6 @@ import com.example.autoclicker.db.PlayDao;
 import com.example.autoclicker.db.PlayItem;
 import com.example.autoclicker.db.Playlist;
 import com.example.autoclicker.db.PlaylistDao;
-import com.example.autoclicker.db.PlaylistWithPlays;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Onclick handle for when the play list item 'play' button is clicked
      * */
     public void startPlaylistOnClickHandler(View view) {
-        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: playlist id to fetch" + view.getTag());
+        Log.d(DEBUG_TAG, "startPlaylistOnClickHandler: playlist id to fetch " + view.getTag());
 
         Playlist playlist = playlistDao.getOne((int) view.getTag());
         List<PlayItem> playItems = playDao.getAllFromPlaylist(playlist.playlistId);
@@ -88,6 +85,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         floatingView.putExtra(INTENT_PARAM_ACTION, Action.PLAY.toString());
         floatingView.putExtra(INTENT_PARAM_PLAYS, new ArrayList<Play>(playsToSend));
         startService(floatingView);
+    }
+
+    public void describePlaylistOnClickHandler(View view) {
+        Log.d(DEBUG_TAG, "describePlaylistOnClickHandler: playlist id to fetch " + view.getTag());
+
+        Playlist playlist = playlistDao.getOne((int) view.getTag());
+        Log.d(DEBUG_TAG, "playlist: " + playlist);
     }
 
     @Override

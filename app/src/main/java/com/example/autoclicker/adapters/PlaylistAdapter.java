@@ -57,14 +57,16 @@ public class PlaylistAdapter extends ArrayAdapter<Playlist> {
 
         // Get button references
         Button startButton = (Button)playlistLayout.findViewById(R.id.start);
+        Button descriptionButton = (Button)playlistLayout.findViewById(R.id.description);
         Button deleteButton = (Button)playlistLayout.findViewById(R.id.delete);
 
         // Get playlist using position
         Playlist currentPlaylist = playlists.get(position);
 
-        // Get name and id of playlist.
+        // set id of playlist.
         startButton.setText(currentPlaylist.name);
         startButton.setTag(currentPlaylist.playlistId);
+        descriptionButton.setTag(currentPlaylist.playlistId);
         deleteButton.setTag(currentPlaylist.playlistId);
 
         // set position as tag
