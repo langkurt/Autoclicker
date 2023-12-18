@@ -1,4 +1,4 @@
-package com.example.autoclicker;
+package com.example.autoclicker.shared;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -15,13 +15,13 @@ public class Play implements Parcelable {
     private final float y;
     private final float delay;
 
-    Play(float x, float y, float delay) {
+    public Play(float x, float y, float delay) {
         this.x = x;
         this.y = y;
         this.delay = delay;
     }
 
-    protected Play(Parcel in) {
+     Play(Parcel in) {
         x = in.readFloat();
         y = in.readFloat();
         delay = in.readFloat();

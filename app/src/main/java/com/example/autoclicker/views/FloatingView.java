@@ -1,12 +1,11 @@
-package com.example.autoclicker;
+package com.example.autoclicker.views;
 
-import static com.example.autoclicker.Constants.INTENT_PARAM_ACTION;
-import static com.example.autoclicker.Constants.INTENT_PARAM_PLAYS;
+import static com.example.autoclicker.shared.Constants.INTENT_PARAM_ACTION;
+import static com.example.autoclicker.shared.Constants.INTENT_PARAM_PLAYS;
 
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.PixelFormat;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,8 +14,13 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 
+import com.example.autoclicker.shared.Action;
+import com.example.autoclicker.MainActivity;
+import com.example.autoclicker.shared.Play;
+import com.example.autoclicker.R;
+import com.example.autoclicker.services.AutoService;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Objects;
 
 public class FloatingView extends Service implements View.OnClickListener {

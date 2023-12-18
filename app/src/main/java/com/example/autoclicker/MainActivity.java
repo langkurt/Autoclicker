@@ -1,8 +1,8 @@
 package com.example.autoclicker;
 
-import static com.example.autoclicker.Constants.INTENT_FILTER_RECORDED_PLAYS;
-import static com.example.autoclicker.Constants.INTENT_PARAM_ACTION;
-import static com.example.autoclicker.Constants.INTENT_PARAM_PLAYS;
+import static com.example.autoclicker.shared.Constants.INTENT_FILTER_RECORDED_PLAYS;
+import static com.example.autoclicker.shared.Constants.INTENT_PARAM_ACTION;
+import static com.example.autoclicker.shared.Constants.INTENT_PARAM_PLAYS;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -28,6 +28,9 @@ import com.example.autoclicker.db.PlayDao;
 import com.example.autoclicker.db.PlayItem;
 import com.example.autoclicker.db.Playlist;
 import com.example.autoclicker.db.PlaylistDao;
+import com.example.autoclicker.shared.Action;
+import com.example.autoclicker.shared.Play;
+import com.example.autoclicker.views.FloatingView;
 
 import java.util.ArrayList;
 import java.util.List;

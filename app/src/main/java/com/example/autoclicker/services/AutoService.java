@@ -1,9 +1,8 @@
-package com.example.autoclicker;
+package com.example.autoclicker.services;
 
-import static android.view.View.VISIBLE;
-import static com.example.autoclicker.Constants.INTENT_FILTER_RECORDED_PLAYS;
-import static com.example.autoclicker.Constants.INTENT_PARAM_ACTION;
-import static com.example.autoclicker.Constants.INTENT_PARAM_PLAYS;
+import static com.example.autoclicker.shared.Constants.INTENT_FILTER_RECORDED_PLAYS;
+import static com.example.autoclicker.shared.Constants.INTENT_PARAM_ACTION;
+import static com.example.autoclicker.shared.Constants.INTENT_PARAM_PLAYS;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
@@ -22,6 +21,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.example.autoclicker.shared.Action;
+import com.example.autoclicker.shared.Play;
 
 import java.util.ArrayList;
 

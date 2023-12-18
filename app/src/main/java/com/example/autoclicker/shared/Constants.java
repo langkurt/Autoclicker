@@ -1,4 +1,4 @@
-package com.example.autoclicker;
+package com.example.autoclicker.shared;
 
 public class Constants {
     public static final String INTENT_PARAM_ACTION = "action";

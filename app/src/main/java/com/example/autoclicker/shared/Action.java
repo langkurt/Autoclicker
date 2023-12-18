@@ -1,4 +1,4 @@
-package com.example.autoclicker;
+package com.example.autoclicker.shared;
 
 public enum Action {
     RECORD,
