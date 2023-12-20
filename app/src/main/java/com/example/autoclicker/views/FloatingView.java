@@ -1,7 +1,6 @@
 package com.example.autoclicker.views;
 
 import static com.example.autoclicker.shared.Constants.INTENT_PARAM_ACTION;
-import static com.example.autoclicker.shared.Constants.INTENT_PARAM_PLAYS;
 
 import android.app.Service;
 import android.content.Intent;
@@ -12,23 +11,18 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 
-import com.example.autoclicker.shared.Action;
 import com.example.autoclicker.MainActivity;
-import com.example.autoclicker.shared.Play;
 import com.example.autoclicker.R;
 import com.example.autoclicker.services.AutoService;
+import com.example.autoclicker.shared.Action;
 
-import java.util.ArrayList;
-import java.util.Objects;
 
 public class FloatingView extends Service implements View.OnClickListener {
+    public static final String DEBUG_TAG = FloatingView.class.getSimpleName();
     private WindowManager mWindowManager;
     private View myFloatingView;
     private WindowManager.LayoutParams myFloatingViewLayoutParams;
-    public static final String DEBUG_TAG = "AUTO_CLICKER_FLOATING_VIEW";
-
     private Intent startingIntent;
 
     @Override
@@ -36,7 +30,6 @@ public class FloatingView extends Service implements View.OnClickListener {
         Log.d(DEBUG_TAG, "onBind");
         return null;
     }
-
 
     @Override
     public void onCreate() {
@@ -60,7 +53,6 @@ public class FloatingView extends Service implements View.OnClickListener {
         return super.onStartCommand(intent, flags, startId);
     }
 
-
     @Override
     public void onDestroy() {
         Log.d(DEBUG_TAG, "onDestroy");
@@ -68,36 +60,20 @@ public class FloatingView extends Service implements View.OnClickListener {
         if (myFloatingView != null) mWindowManager.removeView(myFloatingView);
     }
 
-
     @Override
     public void onClick(View v) {
-        Log.d(DEBUG_TAG, "onClick");
+        Log.d(DEBUG_TAG, "FloatingView: onClick");
 
-        //Log.d("onClick","THIS IS CLICKED");
+        Intent intent = new Intent(getApplicationContext(), AutoService.class);
+
         if (v.getId() == R.id.start) {
             Log.d(DEBUG_TAG, "START was clicked from the floating view");
-            // Starting either the recording or a playback
-            Intent intent = new Intent(getApplicationContext(), AutoService.class);
-            intent.putExtra(INTENT_PARAM_ACTION, this.startingIntent.getStringExtra(INTENT_PARAM_ACTION));
+            intent.putExtras(startingIntent);
+        }
 
-            Log.d(DEBUG_TAG, "onClick: received the following intent " + this.startingIntent);
-            Log.d(DEBUG_TAG, "onClick: received the following intent Extras " + this.startingIntent.getExtras());
-
-            if (Objects.equals(this.startingIntent.getStringExtra(INTENT_PARAM_ACTION), Action.PLAY.toString())) {
-                ArrayList<Play> plays = this.startingIntent.getParcelableArrayListExtra(INTENT_PARAM_PLAYS);
-
-                Log.d(DEBUG_TAG, "onClick: received the following plays " + plays);
-                if (plays == null) {
-                    Log.d(DEBUG_TAG, "onClick: Plays received from the intent are null. Returning");
-                    return;
-                }
-                intent.putExtra(INTENT_PARAM_PLAYS, plays);
-            }
-
-            getApplication().startService(intent);
-
-        } else if (v.getId() == R.id.stop) {
+        if (v.getId() == R.id.stop) {
             Log.d(DEBUG_TAG, "STOP was clicked from the floating view");
+            intent.putExtra(INTENT_PARAM_ACTION, Action.STOP.toString());
             mWindowManager.removeView(myFloatingView);
 
             // Start the main activity
@@ -105,13 +81,8 @@ public class FloatingView extends Service implements View.OnClickListener {
             appMain.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             getApplication().startActivity(appMain);
 
-            // Stop the autoclicker service
-            Intent intent = new Intent(getApplicationContext(), AutoService.class);
-            intent.putExtra(INTENT_PARAM_ACTION, Action.STOP.toString());
-            getApplication().startService(intent);
-
-
         }
+        getApplication().startService(intent);
     }
 
     private void displayFloatingView() {
@@ -167,9 +138,7 @@ public class FloatingView extends Service implements View.OnClickListener {
             }
         });
 
-        Button startButton = (Button) myFloatingView.findViewById(R.id.start);
-        startButton.setOnClickListener(this);
-        Button stopButton = (Button) myFloatingView.findViewById(R.id.stop);
-        stopButton.setOnClickListener(this);
+        myFloatingView.findViewById(R.id.start).setOnClickListener(this);
+        myFloatingView.findViewById(R.id.stop).setOnClickListener(this);
     }
 }
